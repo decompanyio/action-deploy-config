@@ -17,6 +17,7 @@ jobs:
         with:
           branch: prod
           branch-prod: prod
+          branch-dev: master
 
       - name: Test this action (dev)
         id: dev
@@ -24,6 +25,7 @@ jobs:
         with:
           branch: master
           branch-prod: prod
+          branch-dev: master
 
       - name: Test this action (dev)
         id: staging
@@ -31,6 +33,7 @@ jobs:
         with:
           branch: staging
           branch-prod: prod
+          branch-dev: master
 
       - name: Check result
         run: |
