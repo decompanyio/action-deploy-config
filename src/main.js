@@ -13,11 +13,10 @@ export function run() {
         let imageTag = ''
 
         // set env
-        const eventName = github.context.eventName
-        switch (eventName) {
+        switch (github.context.eventName) {
             case 'push':
                 if (branch === branchDev) deployStage = 'dev'
-                else if (branch == branchProd) deployStage = 'staging'
+                else if (branch === branchProd) deployStage = 'staging'
                 else deployStage = branch
                 imageTag = `${deployStage}-${github.context.sha}`
                 break
