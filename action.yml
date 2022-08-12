@@ -1,0 +1,21 @@
+name: 'action-deploy-config'
+description: 'action-deploy-config'
+inputs:
+  branch:
+    description: 'Current branch name'
+    required: true
+  branch-prod:
+    description: 'Production branch name'
+    required: true
+  branch-dev:
+    description: 'Development branch name'
+    required: true
+outputs:
+  deploy_stage:
+    description: 'Deploy stage'
+  image_tag:
+    description: 'Image tag'
+
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

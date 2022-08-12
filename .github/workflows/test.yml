@@ -1,0 +1,44 @@
+name: Test this action
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test this action (prod)
+        id: prod
+        uses: ./
+        with:
+          branch: prod
+          branch-prod: prod
+
+      - name: Test this action (dev)
+        id: dev
+        uses: ./
+        with:
+          branch: master
+          branch-prod: prod
+
+      - name: Test this action (dev)
+        id: staging
+        uses: ./
+        with:
+          branch: staging
+          branch-prod: prod
+
+      - name: Check result
+        run: |
+          echo 'Deploy Stage(prod) : ${{ steps.prod.outputs.deploy_stage }}'
+          echo 'Image Tag(prod) : ${{ steps.prod.outputs.image_tag }}'
+          echo ''
+          echo 'Deploy Stage(dev) : ${{ steps.dev.outputs.deploy_stage }}'
+          echo 'Image Tag(dev) : ${{ steps.dev.outputs.image_tag }}'
+          echo ''
+          echo 'Deploy Stage(staging) : ${{ steps.staging.outputs.deploy_stage }}'
+          echo 'Image Tag(staging) : ${{ steps.staging.outputs.image_tag }}'
