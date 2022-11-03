@@ -29,11 +29,11 @@ jobs:
           branch-prod: prod
           branch-dev: master
 
-      - name: Test this action (dev)
+      - name: Test this action (qa)
         id: staging
         uses: ./
         with:
-          branch: staging
+          branch: qa
           branch-prod: prod
           branch-dev: master
 
@@ -49,9 +49,15 @@ jobs:
         run: |
           echo 'Deploy Stage(prod) : ${{ steps.prod.outputs.deploy_stage }}'
           echo 'Image Tag(prod) : ${{ steps.prod.outputs.image_tag }}'
+          echo 'AWS access key(prod) : ${{ steps.prod.outputs.aws_access_key }}'
+          echo 'AWS secret key(prod) : ${{ steps.prod.outputs.aws_secret_key }}'
           echo ''
           echo 'Deploy Stage(dev) : ${{ steps.dev.outputs.deploy_stage }}'
           echo 'Image Tag(dev) : ${{ steps.dev.outputs.image_tag }}'
+          echo 'AWS access key(dev) : ${{ steps.dev.outputs.aws_access_key }}'
+          echo 'AWS secret key(dev) : ${{ steps.dev.outputs.aws_secret_key }}'
           echo ''
           echo 'Deploy Stage(staging) : ${{ steps.staging.outputs.deploy_stage }}'
           echo 'Image Tag(staging) : ${{ steps.staging.outputs.image_tag }}'
+          echo 'AWS access key(staging) : ${{ steps.staging.outputs.aws_access_key }}'
+          echo 'AWS secret key(staging) : ${{ steps.staging.outputs.aws_secret_key }}'
