@@ -15,6 +15,10 @@ outputs:
     description: 'Deploy stage'
   image_tag:
     description: 'Image tag'
+  aws_access_key:
+    description: 'AWS access key'
+  aws_secret_key:
+    description: 'AWS secret key'
 
 runs:
   using: 'node16'
