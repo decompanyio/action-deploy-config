@@ -9742,7 +9742,7 @@ function run() {
     if (!deployStage) throw new Error('Failed to set environment');
 
     // set aws profile
-    if (branch === branchProd) {
+    if (branch === branchProd || github.context.eventName === 'release') {
       awsAccessKey = 'AWS_ACCESS_KEY_ID_PROD';
       awsSecretKey = 'AWS_SECRET_ACCESS_KEY_PROD';
     } else {
