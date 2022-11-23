@@ -32,7 +32,7 @@ export function run() {
 
       case 'workflow_dispatch':
         const forbiddenBranches = ['main', 'master', 'qa', 'prod'];
-        if (forbiddenBranches.inclueds(branch)) {
+        if (forbiddenBranches.includes(branch)) {
           throw new Error(`Forbidden branch to deploy on sandbox: ${branch}`);
         }
 
