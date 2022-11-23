@@ -19,24 +19,29 @@ export function run() {
       case 'push':
         if (branch === branchDev) deployStage = 'dev';
         else if (branch === branchProd) deployStage = 'staging';
-        else if (branch.startsWith('v')) deployStage = 'qa';
-        else deployStage = branch;
+        else if (branch.startsWith('v') && branch.indexOf('qa') >= 0) deployStage = 'qa';
+        else throw new Error(`Failed to match branch to environment: ${branch}`);
+
         imageTag = `${deployStage}-${github.context.sha}`;
         break;
 
       case 'pull_request':
         deployStage = 'dev';
+        imageTag = `${deployStage}-${github.context.sha}`;
+        break;
 
-        if (github.context.payload.repository.name === 'polarishare-frontend-2022') {
-          const headRef = github.context.payload.pull_request.head.ref;
-          deployStage = headRef.startsWith('seo') ? 'dev' : 'sandbox';
+      case 'workflow_dispatch':
+        const forbiddenBranches = ['main', 'master', 'qa', 'prod'];
+        if (forbiddenBranches.inclueds(branch)) {
+          throw new Error(`Forbidden branch to deploy on sandbox: ${branch}`);
         }
 
+        deployStage = 'sandbox';
         imageTag = `${deployStage}-${github.context.sha}`;
         break;
 
       case 'release':
-        deployStage = github.context.payload.release.target_commitish;
+        deployStage = github.context.payload.release.target_commitish; // prod or qa
         imageTag = github.context.payload.release.tag_name;
         break;
     }
