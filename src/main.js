@@ -36,7 +36,7 @@ export function run() {
           throw new Error(`Forbidden branch to deploy on sandbox: ${branch}`);
         }
 
-        deployStage = 'sandbox';
+        deployStage = branch.startsWith('seo/') ? 'dev' : 'sandbox';
         imageTag = `${deployStage}-${github.context.sha}`;
         break;
 
