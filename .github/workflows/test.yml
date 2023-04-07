@@ -33,7 +33,7 @@ jobs:
         id: staging
         uses: ./
         with:
-          branch: qa
+          branch: v0.0.0-qa
           branch-prod: prod
           branch-dev: master
 

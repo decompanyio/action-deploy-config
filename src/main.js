@@ -2,8 +2,7 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 
 /**
- * Run the action
- * @throws {Error} Failed to set environment
+ * Run the action.
  */
 export function run() {
   try {
@@ -21,6 +20,9 @@ export function run() {
 /**
  * Get the input values from the workflow file
  * @returns {Object} The input values
+ * @returns {string} input.branch - The current branch name
+ * @returns {string} input.branchProd - The production branch name
+ * @returns {string} input.branchDev - The development branch name
  */
 function getInputValues() {
   return {
@@ -102,7 +104,6 @@ function getWorkflowDispatchDeployStage(branch) {
  * @returns {Object} The AWS credentials
  * @returns {string} awsCredentials.awsAccessKey - The AWS access key
  * @returns {string} awsCredentials.awsSecretKey - The AWS secret key
- * @throws {Error} Failed to get AWS credentials
  */
 function getAwsCredentials() {
   const { branch, branchProd } = getInputValues();
