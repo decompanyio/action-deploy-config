@@ -10,6 +10,9 @@ inputs:
   branch-dev:
     description: 'Development branch name'
     required: true
+  target-stage:
+    description: 'Target stage (qa, staging)'
+    required: false
 outputs:
   deploy_stage:
     description: 'Deploy stage'

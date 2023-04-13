@@ -2,13 +2,13 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 
 /**
- * Run the action.
+ * Main function to run the GitHub Action.
  */
 export function run() {
   try {
     const input = getInputValues();
     const deployInfo = getDeployInfo(input);
-    const awsCredentials = getAwsCredentials();
+    const awsCredentials = getAwsCredentials(deployInfo);
 
     logDeploymentInfo(deployInfo, awsCredentials);
     setOutputValues(deployInfo, awsCredentials);
@@ -29,6 +29,7 @@ function getInputValues() {
     branch: core.getInput('branch'),
     branchProd: core.getInput('branch-prod'),
     branchDev: core.getInput('branch-dev'),
+    targetStage: core.getInput('target-stage'),
   };
 }
 
@@ -44,22 +45,22 @@ function getInputValues() {
  */
 function getDeployInfo(input) {
   const { eventName, sha } = github.context;
-  const { branch, branchProd, branchDev } = input;
+  const { branch, branchDev, targetStage } = input;
   let deployStage, imageTag;
 
   switch (eventName) {
     case 'push':
-      deployStage = getPushDeployStage(branch, branchDev, branchProd);
+      deployStage = getPushDeployStage(branch, branchDev);
       break;
     case 'pull_request':
-      deployStage = 'dev';
+      deployStage = getPullRequestDeployStage(branch, branchDev, branchProd);
       break;
     case 'workflow_dispatch':
-      deployStage = getWorkflowDispatchDeployStage(branch);
+      deployStage = getWorkflowDispatchDeployStage(branch, targetStage);
       break;
     case 'release':
-      const { target_commitish, tag_name } = github.context.payload.release;
-      deployStage = target_commitish;
+      const { tag_name } = github.context.payload.release;
+      deployStage = 'prod';
       imageTag = tag_name;
       break;
   }
@@ -78,25 +79,40 @@ function getDeployInfo(input) {
  * @returns {string} The deployment stage
  * @throws {Error} Failed to match branch to environment
  */
-function getPushDeployStage(branch, branchDev, branchProd) {
+function getPushDeployStage(branch, branchDev) {
   if (branch === branchDev) return 'dev';
-  if (branch === branchProd) return 'staging';
-  if (branch.startsWith('v') && branch.includes('qa')) return 'qa';
+  throw new Error(`Failed to match branch to environment: ${branch}`);
+}
+
+/**
+ * Get the deployment stage for pull_request event
+ * @returns {string} The deployment stage
+ * @throws {Error} Failed to match branch to environment
+ */
+function getPullRequestDeployStage(branch, branchDev, branchProd) {
+  const { base_ref } = github.context.payload.pull_request;
+  if (base_ref === branchDev) return 'dev';
+  if (base_ref === branchProd) return 'prod';
   throw new Error(`Failed to match branch to environment: ${branch}`);
 }
 
 /**
  * Get the deployment stage for workflow_dispatch event
  * @param {string} branch - The branch name
+ * @param {string} targetStage - The target stage for deployment
  * @returns {string} The deployment stage
  * @throws {Error} Forbidden branch to deploy on sandbox
  */
-function getWorkflowDispatchDeployStage(branch) {
-  const forbiddenBranches = ['main', 'master', 'qa', 'prod'];
-  if (forbiddenBranches.includes(branch)) {
-    throw new Error(`Forbidden branch to deploy on sandbox: ${branch}`);
+function getWorkflowDispatchDeployStage(branch, targetStage) {
+  console.log(`\n### 배포 환경`);
+  console.log(`targetBranch: ${branch}`);
+  console.log(`targetStage: ${targetStage}\n`);
+
+  if (!targetStage) {
+    return branch.startsWith('seo/') ? 'dev' : 'sandbox';
   }
-  return branch.startsWith('seo/') ? 'dev' : 'sandbox';
+
+  return targetStage;
 }
 
 /**
@@ -105,10 +121,11 @@ function getWorkflowDispatchDeployStage(branch) {
  * @returns {string} awsCredentials.awsAccessKey - The AWS access key
  * @returns {string} awsCredentials.awsSecretKey - The AWS secret key
  */
-function getAwsCredentials() {
-  const { branch, branchProd } = getInputValues();
-  const eventName = github.context.eventName;
-  const isProdEnvironment = branch === branchProd || eventName === 'release';
+function getAwsCredentials(deployInfo) {
+  const { deployStage } = deployInfo;
+  const { eventName } = github.context;
+  const prodStages = ['prod', 'staging'];
+  const isProdEnvironment = prodStages.includes(deployStage) || eventName === 'release';
 
   return {
     awsAccessKey: isProdEnvironment ? 'AWS_ACCESS_KEY_ID_PROD' : 'AWS_ACCESS_KEY_ID_VERIFY',
@@ -123,10 +140,11 @@ function logDeploymentInfo(deployInfo, awsCredentials) {
   const { deployStage, imageTag } = deployInfo;
   const { awsAccessKey, awsSecretKey } = awsCredentials;
 
+  console.log(`\n### 배포 정보`);
   console.log(`deploy_stage : ${deployStage}`);
   console.log(`image_tag : ${imageTag}`);
   console.log(`aws_access_key : ${awsAccessKey}`);
-  console.log(`aws_secret_key : ${awsSecretKey}`);
+  console.log(`aws_secret_key : ${awsSecretKey}\n`);
 }
 
 /**
