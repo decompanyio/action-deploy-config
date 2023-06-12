@@ -13,29 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Test this action (prod)
-        id: prod
-        uses: ./
-        with:
-          branch: prod
-          branch-prod: prod
-          branch-dev: master
-
       - name: Test this action (dev)
         id: dev
         uses: ./
         with:
-          branch: master
-          branch-prod: prod
-          branch-dev: master
-
-      - name: Test this action (qa)
-        id: staging
-        uses: ./
-        with:
-          branch: v0.0.0-qa
-          branch-prod: prod
-          branch-dev: master
+          branch: dev
+          branch-prod: master
+          branch-dev: dev
 
       - name: Test this action (action)
         id: action
