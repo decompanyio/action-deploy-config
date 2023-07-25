@@ -20,9 +20,6 @@ export function run() {
 /**
  * Get the input values from the workflow file
  * @returns {Object} The input values
- * @returns {string} input.branch - The current branch name
- * @returns {string} input.branchProd - The production branch name
- * @returns {string} input.branchDev - The development branch name
  */
 function getInputValues() {
   return {
@@ -36,16 +33,11 @@ function getInputValues() {
 /**
  * Get deployment information based on the input and GitHub event context.
  * @param {Object} input - Branch information for the action.
- * @param {string} input.branch - The current branch name.
- * @param {string} input.branchProd - The production branch name.
- * @param {string} input.branchDev - The development branch name.
  * @returns {Object} - An object containing the deploy stage and image tag.
- * @returns {string} deployInfo.deployStage - The deployment stage for the current action.
- * @returns {string} deployInfo.imageTag - The image tag for the deployed application.
  */
 function getDeployInfo(input) {
   const { eventName, sha } = github.context;
-  const { branch, branchDev, targetStage } = input;
+  const { branch, branchDev, branchProd, targetStage } = input;
   let deployStage, imageTag;
 
   switch (eventName) {
@@ -87,13 +79,9 @@ function getPushDeployStage(branch, branchDev) {
 /**
  * Get the deployment stage for pull_request event
  * @returns {string} The deployment stage
- * @throws {Error} Failed to match branch to environment
  */
 function getPullRequestDeployStage(branch, branchDev, branchProd) {
-  const { base_ref } = github.context.payload.pull_request;
-  if (base_ref === branchDev) return 'dev';
-  if (base_ref === branchProd) return 'prod';
-  throw new Error(`Failed to match branch to environment: ${branch}`);
+  return 'dev';
 }
 
 /**
@@ -118,18 +106,18 @@ function getWorkflowDispatchDeployStage(branch, targetStage) {
 /**
  * Get the AWS credentials
  * @returns {Object} The AWS credentials
- * @returns {string} awsCredentials.awsAccessKey - The AWS access key
- * @returns {string} awsCredentials.awsSecretKey - The AWS secret key
  */
 function getAwsCredentials(deployInfo) {
   const { deployStage } = deployInfo;
   const { eventName } = github.context;
   const prodStages = ['prod', 'staging'];
   const isProdEnvironment = prodStages.includes(deployStage) || eventName === 'release';
+  const account = isProdEnvironment ? 'prod' : 'verify';
 
   return {
-    awsAccessKey: isProdEnvironment ? 'AWS_ACCESS_KEY_ID_PROD' : 'AWS_ACCESS_KEY_ID_VERIFY',
-    awsSecretKey: isProdEnvironment ? 'AWS_SECRET_ACCESS_KEY_PROD' : 'AWS_SECRET_ACCESS_KEY_VERIFY',
+    awsAccessKey: `AWS_ACCESS_KEY_ID_${account}`.toUpperCase(),
+    awsSecretKey: `AWS_SECRET_ACCESS_KEY_${account}`.toUpperCase(),
+    awsAccount: account,
   };
 }
 
@@ -138,30 +126,28 @@ function getAwsCredentials(deployInfo) {
  */
 function logDeploymentInfo(deployInfo, awsCredentials) {
   const { deployStage, imageTag } = deployInfo;
-  const { awsAccessKey, awsSecretKey } = awsCredentials;
+  const { awsAccessKey, awsSecretKey, awsAccount } = awsCredentials;
 
   console.log(`\n### 배포 정보`);
   console.log(`deploy_stage : ${deployStage}`);
   console.log(`image_tag : ${imageTag}`);
   console.log(`aws_access_key : ${awsAccessKey}`);
-  console.log(`aws_secret_key : ${awsSecretKey}\n`);
+  console.log(`aws_secret_key : ${awsSecretKey}`);
+  console.log(`aws_account : ${awsAccount}\n`);
 }
 
 /**
  * Set output values for the GitHub Action.
  * @param {Object} deployInfo - Information about the deployment stage and image tag.
- * @param {string} deployInfo.deployStage - The deployment stage for the current action.
- * @param {string} deployInfo.imageTag - The image tag for the deployed application.
  * @param {Object} awsCredentials - AWS credentials for the action.
- * @param {string} awsCredentials.awsAccessKey - The AWS access key.
- * @param {string} awsCredentials.awsSecretKey - The AWS secret key.
  */
 function setOutputValues(deployInfo, awsCredentials) {
   const { deployStage, imageTag } = deployInfo;
-  const { awsAccessKey, awsSecretKey } = awsCredentials;
+  const { awsAccessKey, awsSecretKey, awsAccount } = awsCredentials;
 
   core.setOutput('deploy_stage', deployStage);
   core.setOutput('image_tag', imageTag);
   core.setOutput('aws_access_key', awsAccessKey);
   core.setOutput('aws_secret_key', awsSecretKey);
+  core.setOutput('aws_account', awsAccount);
 }

@@ -22,6 +22,8 @@ outputs:
     description: 'AWS access key'
   aws_secret_key:
     description: 'AWS secret key'
+  aws_account:
+    description: 'AWS account'
 
 runs:
   using: 'node16'
