@@ -92,13 +92,9 @@ function getPullRequestDeployStage(branch, branchDev, branchProd) {
  * @throws {Error} Forbidden branch to deploy on sandbox
  */
 function getWorkflowDispatchDeployStage(branch, targetStage) {
-  console.log(`\n### 배포 환경`);
+  console.log(`\n### 배포 파라미터`);
   console.log(`targetBranch: ${branch}`);
   console.log(`targetStage: ${targetStage}\n`);
-
-  if (!targetStage) {
-    return branch.startsWith('seo/') ? 'dev' : 'sandbox';
-  }
 
   return targetStage;
 }
