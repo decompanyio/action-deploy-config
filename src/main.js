@@ -42,7 +42,7 @@ function getDeployInfo(input) {
 
   switch (eventName) {
     case 'push':
-      deployStage = getPushDeployStage(branch, branchDev);
+      deployStage = getPushDeployStage(branch, branchDev, branchProd);
       break;
     case 'pull_request':
       deployStage = getPullRequestDeployStage(branch, branchDev, branchProd);
@@ -71,8 +71,9 @@ function getDeployInfo(input) {
  * @returns {string} The deployment stage
  * @throws {Error} Failed to match branch to environment
  */
-function getPushDeployStage(branch, branchDev) {
+function getPushDeployStage(branch, branchDev, branchProd) {
   if (branch === branchDev) return 'dev';
+  if (branch === branchProd) return 'prod';
   throw new Error(`Failed to match branch to environment: ${branch}`);
 }
 
